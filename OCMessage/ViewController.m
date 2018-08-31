@@ -25,7 +25,7 @@
         weakself.tf.frame = CGRectOffset(weakself.tf.frame, 0, -keyboardHeight);
     };
     _keyboardMan.animateWhenKeyboardDisappear = ^(CGFloat keyboardHeight) {
-        weakself.tf.frame = CGRectOffset(weakself.tf.frame, 0, -keyboardHeight);
+        weakself.tf.frame = CGRectOffset(weakself.tf.frame, 0, keyboardHeight);
     };
     _keyboardMan.postKeyboardInfo = ^(KeyboardMan *keyboardMan, KeyboardInfo *keyboardInfo) {
         
