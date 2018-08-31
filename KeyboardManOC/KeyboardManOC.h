@@ -7,6 +7,7 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "KeyboardMan.h"
 
 //! Project version number for KeyboardManOC.
 FOUNDATION_EXPORT double KeyboardManOCVersionNumber;

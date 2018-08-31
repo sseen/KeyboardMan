@@ -14,7 +14,14 @@ typedef enum {
     hide
 } Action;
 
+@class KeyboardInfo;
+
 @interface KeyboardMan : NSObject
+
+@property (nonatomic, copy, nullable) void (^animateWhenKeyboardAppear)(NSInteger appearPostIndex, CGFloat keyboardHeight, CGFloat keyboardHeightIncrement) ;
+@property (nonatomic, copy, nullable) void (^animateWhenKeyboardDisappear)(CGFloat keyboardHeight);
+@property (nonatomic, copy, nullable) void (^postKeyboardInfo)(KeyboardMan *keyboardMan, KeyboardInfo *keyboardInfo);
+
 
 @end
 

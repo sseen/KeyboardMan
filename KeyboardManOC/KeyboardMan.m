@@ -14,9 +14,6 @@
 @property (nonatomic, assign) NSInteger appearPostIndex;
 @property (nonatomic, strong) KeyboardInfo *keyboardInfo;
 
-@property (nonatomic, copy, nullable) void (^inputTeanimateWhenKeyboardAppearxtBlk)(int appearPostIndex, CGFloat keyboardHeight, CGFloat keyboardHeightIncrement) ;
-@property (nonatomic, copy, nullable) void (^animateWhenKeyboardDisappear)(CGFloat keyboardHeight);
-@property (nonatomic, copy, nullable) void (^postKeyboardInfo)(KeyboardMan *keyboardMan, KeyboardInfo *keyboardInfo);
 @end
 
 @implementation KeyboardMan
@@ -45,15 +42,15 @@
     CGRect frameBegin = [(NSValue *)userInfo[UIKeyboardFrameBeginUserInfoKey] CGRectValue];
     CGRect frameEnd = [(NSValue *)userInfo[UIKeyboardFrameEndUserInfoKey] CGRectValue];
     CGFloat currentHeight = frameEnd.size.height;
-    CGFloat previousHeight = _keyboardInfo.height;
+    CGFloat previousHeight = self.keyboardInfo.height;
     CGFloat heightIncrement = currentHeight - previousHeight;
     BOOL isSameAction;
-    if (_keyboardInfo.action) {
-        isSameAction = (ac == _keyboardInfo.action);
+    if (self.keyboardInfo.action) {
+        isSameAction = (ac == self.keyboardInfo.action);
     } else {
         isSameAction = false;
     }
-    _keyboardInfo = [[KeyboardInfo alloc] initWithAnimationDuration:animationDuration
+    self.keyboardInfo = [[KeyboardInfo alloc] initWithAnimationDuration:animationDuration
                                                      animationCurve:animationCurve
                                                          frameBegin:frameBegin
                                                            frameEnd:frameEnd
@@ -90,6 +87,7 @@
 #pragma mark - setter
 
 - (void)setKeyboardObserver:(NSNotificationCenter *)keyboardObserver {
+    _keyboardObserver = keyboardObserver;
     [_keyboardObserver removeObserver:self];
     [_keyboardObserver addObserver:self selector:@selector(keyboardWillShow:) name:UIKeyboardWillShowNotification object:nil];
     [_keyboardObserver addObserver:self selector:@selector(keyboardWillChangeFrame:) name:UIKeyboardWillChangeFrameNotification object:nil];
@@ -99,25 +97,58 @@
 
 - (void)setKeyboardObserveEnabled:(BOOL)keyboardObserveEnabled {
     if (keyboardObserveEnabled != _keyboardObserveEnabled) {
-        if (_keyboardObserveEnabled) {
-            _keyboardObserver = [NSNotificationCenter defaultCenter];
+        if (keyboardObserveEnabled) {
+            self.keyboardObserver = [NSNotificationCenter defaultCenter];
         }
     }
 }
 
 - (void)setKeyboardInfo:(KeyboardInfo *)keyboardInfo {
+    _keyboardInfo = keyboardInfo;
     
+    if (![UIApplication isNotInBackground]) {
+        return;
+    }
+    if (!keyboardInfo) {
+        return;
+    }
+    if (!keyboardInfo.isSameAction || keyboardInfo.heightIncrement != 0) {
+        NSTimeInterval duration = keyboardInfo.animationDuration;
+        uint curve = keyboardInfo.animationCurve;
+        UIViewAnimationOptions options = curve << 16 | UIViewAnimationOptionBeginFromCurrentState | UIViewAnimationOptionAllowUserInteraction;
+        [UIView animateWithDuration:duration
+                              delay:0
+                            options:options
+                         animations:^{
+                             switch (keyboardInfo.action) {
+                                 case show:
+                                     self.animateWhenKeyboardAppear(self.appearPostIndex, keyboardInfo.height, keyboardInfo.heightIncrement);
+                                     self.appearPostIndex += 1;
+                                     break;
+                                 case hide:
+                                     self.animateWhenKeyboardDisappear(keyboardInfo.height);
+                                     self.appearPostIndex += 0;
+                                     break;
+                                 default:
+                                     break;
+                             }
+                         } completion:nil];
+        _postKeyboardInfo(self, keyboardInfo);
+    }
 }
 
-- (void)setInputTextBlk:(void (^)(NSString *))inputTextBlk {
+- (void)setAnimateWhenKeyboardAppear:(void (^)(NSInteger, CGFloat, CGFloat))animateWhenKeyboardAppear{
+    _animateWhenKeyboardAppear = animateWhenKeyboardAppear;
     self.keyboardObserveEnabled = true;
 }
 
 - (void)setAnimateWhenKeyboardDisappear:(void (^)(CGFloat))animateWhenKeyboardDisappear {
+    _animateWhenKeyboardDisappear = animateWhenKeyboardDisappear;
     self.keyboardObserveEnabled = true;
 }
 
 - (void)setPostKeyboardInfo:(void (^)(KeyboardMan *, KeyboardInfo *))postKeyboardInfo {
+    _postKeyboardInfo = postKeyboardInfo;
     self.keyboardObserveEnabled = true;
 }
 @end
@@ -146,6 +177,7 @@
     self.frameEnd = fe;
     self.action = at;
     self.isSameAction = isSame;
+    self.height = fe.size.height;
     
     return self;
 }
