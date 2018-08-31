@@ -26,8 +26,15 @@ typedef enum {
 @property (nonatomic, assign) CGFloat heightIncrement;
 @property (nonatomic, assign) Action action;
 @property (nonatomic, assign) NSTimeInterval animationDuration;
-@property (nonatomic, assign) UInt8 animationCurve;
+@property (nonatomic, assign) uint animationCurve;
 @property (nonatomic, assign) BOOL isSameAction;
+
+- (id)initWithAnimationDuration:(NSTimeInterval )ad
+                 animationCurve:(uint)ac
+                     frameBegin:(CGRect)fb
+                       frameEnd:(CGRect)fe
+                heightIncrement:(CGFloat)hi
+                         action:(Action)at isSameAction:(BOOL)isSame ;
 
 @end
 
